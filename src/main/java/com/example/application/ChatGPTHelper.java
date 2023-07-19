@@ -1,30 +1,24 @@
 package com.example.application;
 
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 public class ChatGPTHelper {
 	
-	public static String chatGPT(String message) {
+	public static String chatGPT(String message, String key) {
 		
 		String API_ENDPOINT = "https://api.openai.com/v1/chat/completions";
-		String API_KEY = "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";
+		String API_KEY = key;
 		String API_VERSION = "gpt-3.5-turbo";
 		
 
@@ -34,7 +28,7 @@ public class ChatGPTHelper {
 
 	             Map<String, Object> requestData = new HashMap<>();
 	            // requestData.put("prompt", message);
-	             requestData.put("max_tokens", 50); // Set the maximum number of tokens in the response as an integer
+	             requestData.put("max_tokens", 1000); // Set the maximum number of tokens in the response as an integer
 	             requestData.put("temperature", 0.7); // Set the temperature (higher values make the response more random)
 	             requestData.put("n", 1); // Set the number of responses to generate
 	             requestData.put("model", API_VERSION); // Specify the model version
@@ -51,11 +45,24 @@ public class ChatGPTHelper {
 	                     .build();
 
 	             Response response = client.newCall(request).execute();
+	             
 	             if (response.isSuccessful()) {
-	                 String responseBody = response.body().string();
-	                 System.out.println(responseBody);
-	                 // Handle the response here
-	                 return responseBody;
+	            	    String responseBody = response.body().string();
+
+	            	    // Parsing the JSON
+	            	    ObjectMapper objectMapper = new ObjectMapper();
+	            	    JsonNode rootNode = objectMapper.readTree(responseBody);
+
+	            	    // Navigate to the 'content' field
+	            	    String content = rootNode
+	            	        .path("choices")
+	            	        .get(0) // if you are sure there is at least one element
+	            	        .path("message")
+	            	        .path("content")
+	            	        .asText();
+
+	            	    System.out.println(responseBody);
+	            	    return content;
 	                 
 	             } else {
 	                 System.err.println("Request failed with code: " + response.code());

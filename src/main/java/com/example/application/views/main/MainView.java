@@ -8,6 +8,7 @@ import com.vaadin.flow.component.messages.MessageInput;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
@@ -32,6 +33,10 @@ public class MainView extends HorizontalLayout {
     	newChatButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
     	newChatButton.setWidthFull();
     	promptLayout.add(newChatButton);
+    	
+    	PasswordField apiKeyField = new PasswordField();
+    	apiKeyField.setLabel("API Key");
+    	promptLayout.add(apiKeyField);
 
     	VerticalLayout chatBotLayout = new VerticalLayout();
     	chatBotLayout.setJustifyContentMode(JustifyContentMode.END);
@@ -40,7 +45,7 @@ public class MainView extends HorizontalLayout {
     	input.addSubmitListener(submitEvent -> {
     		
     		ChatGPTHelper helper;
-    	    Notification.show(ChatGPTHelper.chatGPT(submitEvent.getValue()),
+    	    Notification.show(ChatGPTHelper.chatGPT(submitEvent.getValue(), apiKeyField.getValue()),
     	            3000, Notification.Position.MIDDLE);
     	});
     	
