@@ -1,13 +1,21 @@
 package com.example.application.views.main;
 
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import com.example.application.ChatGPTHelper;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.messages.MessageInput;
+import com.vaadin.flow.component.messages.MessageList;
+import com.vaadin.flow.component.messages.MessageListItem;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -21,6 +29,8 @@ public class MainView extends HorizontalLayout {
     	String primaryColor  = "#303030";
     	String secondaryColor  = "#c6cccc";
     	String tertiaryColor  = "#6ec2c2";
+    	ArrayList<MessageListItem> messages = new ArrayList<MessageListItem>();
+    	
 
 
     	//getStyle().set("background-color", primaryColor);
@@ -28,25 +38,71 @@ public class MainView extends HorizontalLayout {
        	promptLayout.setWidth("20em");
     	promptLayout.getStyle().set("background-color", secondaryColor);
     	
-    	Button newChatButton = new Button(" +  New Chat ");
-    	//newChatButton.getStyle().set("background-color", tertiaryColor);
-    	newChatButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-    	newChatButton.setWidthFull();
-    	promptLayout.add(newChatButton);
     	
     	PasswordField apiKeyField = new PasswordField();
     	apiKeyField.setLabel("API Key");
     	promptLayout.add(apiKeyField);
+    	
+    	Select<String> selectApiVersion = new Select<>();
+    	selectApiVersion.setLabel("API Version");
+    	selectApiVersion.setItems("gpt-3.5-turbo", "gpt-4");
+    	selectApiVersion.setValue("gpt-3.5-turbot");
+    	
+    	promptLayout.add(selectApiVersion);
 
+    	NumberField temperatureField = new NumberField();
+    	temperatureField.setLabel("Temperature");
+    	temperatureField.setStep(0.05);
+    	temperatureField.setValue(0.5);
+    	temperatureField.setMax(1.0);
+    	temperatureField.setMin(0.0);
+    	temperatureField.setStepButtonsVisible(true);
+    	promptLayout.add(temperatureField);
+    	
+    	NumberField tokensField = new NumberField();
+    	tokensField.setLabel("Tokens");
+    	tokensField.setStep(1);
+    	tokensField.setValue(500.0);
+    	tokensField.setMin(10);
+    	tokensField.setStepButtonsVisible(true);
+    	promptLayout.add(tokensField);
+    	
+    	
     	VerticalLayout chatBotLayout = new VerticalLayout();
     	chatBotLayout.setJustifyContentMode(JustifyContentMode.END);
+    	
+    	MessageList list = new MessageList();
+    	
+    	chatBotLayout.add(list);
+    	
+    	
     	
     	MessageInput input = new MessageInput();
     	input.addSubmitListener(submitEvent -> {
     		
+    		MessageListItem message1 = new MessageListItem(
+    				submitEvent.getValue(),
+        	        null , "User");
+        	message1.setUserColorIndex(1);
+        	
+        	messages.add(message1);
+        
+        	
     		ChatGPTHelper helper;
-    	    Notification.show(ChatGPTHelper.chatGPT(submitEvent.getValue(), apiKeyField.getValue()),
-    	            3000, Notification.Position.MIDDLE);
+    		
+    		MessageListItem message2 = new MessageListItem(
+    				ChatGPTHelper.chatGPT(submitEvent.getValue(), apiKeyField.getValue(), selectApiVersion.getValue(), tokensField.getValue().intValue(), temperatureField.getValue()),
+        	        null , "Dave");
+        	message1.setUserColorIndex(2);
+     
+        	messages.add(message2);
+    	    
+    	    VerticalLayout messageLayout = new VerticalLayout();
+    	    messageLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+    	    
+    	    list.setItems(messages);
+
+    	    
     	});
     	
     	input.setWidthFull();
@@ -62,4 +118,8 @@ public class MainView extends HorizontalLayout {
     	setHeightFull();
     	
     	}
+    
+    
     }
+
+

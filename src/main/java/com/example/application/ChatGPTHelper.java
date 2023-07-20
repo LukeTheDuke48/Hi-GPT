@@ -15,12 +15,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 public class ChatGPTHelper {
 	
-	public static String chatGPT(String message, String key) {
+	public static String chatGPT(String message, String key, String apiVersion, int tokens, double temperature) {
 		
 		String API_ENDPOINT = "https://api.openai.com/v1/chat/completions";
-		String API_KEY = key;
-		String API_VERSION = "gpt-3.5-turbo";
-		
 
 	        try {
 	        	 OkHttpClient client = new OkHttpClient();
@@ -28,10 +25,10 @@ public class ChatGPTHelper {
 
 	             Map<String, Object> requestData = new HashMap<>();
 	            // requestData.put("prompt", message);
-	             requestData.put("max_tokens", 1000); // Set the maximum number of tokens in the response as an integer
-	             requestData.put("temperature", 0.7); // Set the temperature (higher values make the response more random)
+	             requestData.put("max_tokens", tokens); // Set the maximum number of tokens in the response as an integer
+	             requestData.put("temperature", temperature); // Set the temperature (higher values make the response more random)
 	             requestData.put("n", 1); // Set the number of responses to generate
-	             requestData.put("model", API_VERSION); // Specify the model version
+	             requestData.put("model", apiVersion); // Specify the model version
 	             requestData.put("messages", createMessages(message));
 
 
@@ -40,7 +37,7 @@ public class ChatGPTHelper {
 	             Request request = new Request.Builder()
 	                     .url(API_ENDPOINT)
 	                     .addHeader("Content-Type", "application/json")
-	                     .addHeader("Authorization", "Bearer " + API_KEY)
+	                     .addHeader("Authorization", "Bearer " + key)
 	                     .post(requestBody)
 	                     .build();
 
