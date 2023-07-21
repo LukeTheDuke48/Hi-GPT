@@ -24,6 +24,8 @@ import com.vaadin.flow.router.Route;
 @Route(value = "")
 public class MainView extends HorizontalLayout {
 
+	private ChatGPTHelper helper;
+
     public MainView() {
     	
     	String primaryColor  = "#303030";
@@ -31,6 +33,7 @@ public class MainView extends HorizontalLayout {
     	String tertiaryColor  = "#6ec2c2";
     	ArrayList<MessageListItem> messages = new ArrayList<MessageListItem>();
     	
+		this.helper = new ChatGPTHelper();
 
     	VerticalLayout promptLayout = new VerticalLayout();
        	promptLayout.setWidth("20em");
@@ -83,9 +86,9 @@ public class MainView extends HorizontalLayout {
         	messages.add(message1);
         
     		MessageListItem message2 = new MessageListItem(
-    				ChatGPTHelper.chatGPT(submitEvent.getValue(), apiKeyField.getValue(), selectApiVersion.getValue(), tokensField.getValue().intValue(), temperatureField.getValue()),
-        	        null , "Dave");
-        	message1.setUserColorIndex(2);
+                    helper.chatGPT(submitEvent.getValue(), apiKeyField.getValue(), selectApiVersion.getValue(), tokensField.getValue().intValue(), temperatureField.getValue()),
+                    null , "Dave");
+            message1.setUserColorIndex(2);
      
         	messages.add(message2);
     	    
