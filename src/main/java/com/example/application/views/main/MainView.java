@@ -17,6 +17,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.PasswordField;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
@@ -47,7 +48,7 @@ public class MainView extends HorizontalLayout {
     	Select<String> selectApiVersion = new Select<>();
     	selectApiVersion.setLabel("API Version");
     	selectApiVersion.setItems("gpt-3.5-turbo", "gpt-4");
-    	selectApiVersion.setValue("gpt-3.5-turbot");
+    	selectApiVersion.setValue("gpt-3.5-turbo");
     	
     	promptLayout.add(selectApiVersion);
 
@@ -68,6 +69,12 @@ public class MainView extends HorizontalLayout {
     	tokensField.setStepButtonsVisible(true);
     	promptLayout.add(tokensField);
     	
+    	
+    	TextField tokenCountField;
+    	  
+    	tokenCountField = new TextField("Total Tokens");
+    	        tokenCountField.setReadOnly(true);
+    	        promptLayout.add(tokenCountField);
     	
     	VerticalLayout chatBotLayout = new VerticalLayout();
     	chatBotLayout.setJustifyContentMode(JustifyContentMode.END);
@@ -96,6 +103,7 @@ public class MainView extends HorizontalLayout {
     	    messageLayout.setJustifyContentMode(JustifyContentMode.CENTER);
     	    
     	    list.setItems(messages);
+    	    tokenCountField.setValue(String.valueOf(helper.getTotalTokens()));
     	});
     	
     	input.setWidthFull();

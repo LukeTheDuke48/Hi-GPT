@@ -1,9 +1,12 @@
 package com.example.application;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.MediaType;
@@ -16,6 +19,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class ChatGPTHelper {
 
     private List<Map<String, String>> messages;
+    private int totalTokens = 0;
+
 
     public ChatGPTHelper() {
         // Initialize messages with a system message
@@ -27,7 +32,11 @@ public class ChatGPTHelper {
     public String chatGPT(String message, String key, String apiVersion, int tokens, double temperature) {
         String API_ENDPOINT = "https://api.openai.com/v1/chat/completions";
         try {
-            OkHttpClient client = new OkHttpClient();
+        	OkHttpClient client = new OkHttpClient.Builder()
+                    .readTimeout(60, TimeUnit.SECONDS)
+                    .writeTimeout(60, TimeUnit.SECONDS)
+                    .connectTimeout(60, TimeUnit.SECONDS)
+                    .build();
             MediaType mediaType = MediaType.parse("application/json");
 
             // Add the user's message to the history
@@ -65,6 +74,15 @@ public class ChatGPTHelper {
                     .path("message")
                     .path("content")
                     .asText();
+          
+                
+                // Total number of tokens used in the query
+                int tokenTotal = rootNode
+                        .path("usage")
+                        .path("total_tokens")
+                        .asInt();
+                
+                totalTokens += tokenTotal;
 
                 // After getting the response from the API, add it to the history
                 Map<String, String> assistantMessage = Map.of("role", "assistant", "content", content);
@@ -76,12 +94,19 @@ public class ChatGPTHelper {
             } else {
                 System.err.println("Request failed with code: " + response.code());
                 System.err.println(response.body().string());
+                return "Dave didn't want to talk because the request failed with code: " + response.code();
             }
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return "Dave didn't want to talk because there was an error processing the JSON: " + e.getMessage();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "Dave didn't want to talk because there was an IO exception: " + e.getMessage();
         } catch (Exception e) {
             e.printStackTrace();
+            return "Dave didn't want to talk because an exception occurred: " + e.getMessage();
         }
 
-        return "Dave didn't want to talk :(";
     }
 
     private static String mapToJson(Map<String, Object> map) {
@@ -93,5 +118,10 @@ public class ChatGPTHelper {
             return "";
         }
     }
+    
+    public int getTotalTokens() {
+        return totalTokens;
+    }
+    
 }
 
