@@ -32,8 +32,6 @@ public class MainView extends HorizontalLayout {
     	ArrayList<MessageListItem> messages = new ArrayList<MessageListItem>();
     	
 
-
-    	//getStyle().set("background-color", primaryColor);
     	VerticalLayout promptLayout = new VerticalLayout();
        	promptLayout.setWidth("20em");
     	promptLayout.getStyle().set("background-color", secondaryColor);
@@ -72,10 +70,7 @@ public class MainView extends HorizontalLayout {
     	chatBotLayout.setJustifyContentMode(JustifyContentMode.END);
     	
     	MessageList list = new MessageList();
-    	
     	chatBotLayout.add(list);
-    	
-    	
     	
     	MessageInput input = new MessageInput();
     	input.addSubmitListener(submitEvent -> {
@@ -87,9 +82,6 @@ public class MainView extends HorizontalLayout {
         	
         	messages.add(message1);
         
-        	
-    		ChatGPTHelper helper;
-    		
     		MessageListItem message2 = new MessageListItem(
     				ChatGPTHelper.chatGPT(submitEvent.getValue(), apiKeyField.getValue(), selectApiVersion.getValue(), tokensField.getValue().intValue(), temperatureField.getValue()),
         	        null , "Dave");
@@ -101,8 +93,6 @@ public class MainView extends HorizontalLayout {
     	    messageLayout.setJustifyContentMode(JustifyContentMode.CENTER);
     	    
     	    list.setItems(messages);
-
-    	    
     	});
     	
     	input.setWidthFull();

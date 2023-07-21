@@ -29,7 +29,7 @@ public class ChatGPTHelper {
 	             requestData.put("temperature", temperature); // Set the temperature (higher values make the response more random)
 	             requestData.put("n", 1); // Set the number of responses to generate
 	             requestData.put("model", apiVersion); // Specify the model version
-	             requestData.put("messages", createMessages(message));
+	             requestData.put("messages", createMessages("Your name is Dave. Answer this: "+message));
 
 
 
