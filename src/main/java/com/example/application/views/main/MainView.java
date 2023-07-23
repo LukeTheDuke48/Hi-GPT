@@ -21,6 +21,14 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
+import com.vaadin.flow.component.ComponentEvent;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.UI;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.vaadin.flow.component.Key;
+
 @PageTitle("Hi GPT")
 @Route(value = "")
 public class MainView extends HorizontalLayout {
@@ -39,7 +47,6 @@ public class MainView extends HorizontalLayout {
     	VerticalLayout promptLayout = new VerticalLayout();
        	promptLayout.setWidth("20em");
     	promptLayout.getStyle().set("background-color", secondaryColor);
-    	
     	
     	PasswordField apiKeyField = new PasswordField();
     	apiKeyField.setLabel("API Key");
@@ -69,7 +76,6 @@ public class MainView extends HorizontalLayout {
     	tokensField.setStepButtonsVisible(true);
     	promptLayout.add(tokensField);
     	
-    	
     	TextField tokenCountField;
     	  
     	tokenCountField = new TextField("Total Tokens");
@@ -82,44 +88,113 @@ public class MainView extends HorizontalLayout {
     	MessageList list = new MessageList();
     	chatBotLayout.add(list);
     	
-    	MessageInput input = new MessageInput();
-    	input.addSubmitListener(submitEvent -> {
+    	// MessageInput input = new MessageInput();
+    	// input.addSubmitListener(submitEvent -> {
     		
-    		MessageListItem message1 = new MessageListItem(
-    				submitEvent.getValue(),
-        	        null , "User");
-        	message1.setUserColorIndex(1);
+    	// 	MessageListItem message1 = new MessageListItem(
+    	// 			submitEvent.getValue(),
+        // 	        null , "User");
+        // 	message1.setUserColorIndex(1);
         	
-        	messages.add(message1);
+        // 	messages.add(message1);
         
-    		MessageListItem message2 = new MessageListItem(
-                    helper.chatGPT(submitEvent.getValue(), apiKeyField.getValue(), selectApiVersion.getValue(), tokensField.getValue().intValue(), temperatureField.getValue()),
-                    null , "Dave");
-            message1.setUserColorIndex(2);
+    	// 	MessageListItem message2 = new MessageListItem(
+        //             helper.chatGPT(submitEvent.getValue(), apiKeyField.getValue(), selectApiVersion.getValue(), tokensField.getValue().intValue(), temperatureField.getValue()),
+        //             null , "Dave");
+        //     message1.setUserColorIndex(2);
      
-        	messages.add(message2);
+        // 	messages.add(message2);
     	    
-    	    VerticalLayout messageLayout = new VerticalLayout();
-    	    messageLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+    	//     VerticalLayout messageLayout = new VerticalLayout();
+    	//     messageLayout.setJustifyContentMode(JustifyContentMode.CENTER);
     	    
-    	    list.setItems(messages);
-    	    tokenCountField.setValue(String.valueOf(helper.getTotalTokens()));
-    	});
+    	//     list.setItems(messages);
+    	//     tokenCountField.setValue(String.valueOf(helper.getTotalTokens()));
+    	// });
     	
-    	input.setWidthFull();
-    	chatBotLayout.add(input);
+    	// input.setWidthFull();
+    	// chatBotLayout.add(input);
     	
-    	HorizontalLayout searchBarLayout = new HorizontalLayout();
-    	searchBarLayout.setJustifyContentMode(JustifyContentMode.END);
+    	// HorizontalLayout searchBarLayout = new HorizontalLayout();
+    	// searchBarLayout.setJustifyContentMode(JustifyContentMode.END);
     	
-    	chatBotLayout.add(searchBarLayout);
-    	
-    	add(promptLayout);
-    	add(chatBotLayout);
-    	setHeightFull();
+    	// chatBotLayout.add(searchBarLayout);
+
+		TextField input = new TextField();
+        input.setPlaceholder("Enter message here...");
+        input.setWidthFull();
+        input.addKeyPressListener(Key.ENTER, event -> {
+            submitMessage(input.getValue(), apiKeyField, selectApiVersion, tokensField, temperatureField, tokenCountField, messages, list);
+            input.clear();
+        });
+
+        Button micButton = new Button(new Icon(VaadinIcon.MICROPHONE));
+        micButton.getElement().getStyle().set("color", "red"); // Color when off
+        micButton.getElement().getStyle().set("border-radius", "50%"); // Make it circular
+
+        Button sendButton = new Button(new Icon(VaadinIcon.ARROW_RIGHT));
+        sendButton.addClickListener(e -> {
+            submitMessage(input.getValue(), apiKeyField, selectApiVersion, tokensField, temperatureField, tokenCountField, messages, list);
+            input.clear();
+        });
+
+        AtomicBoolean isListening = new AtomicBoolean(false); // State of the microphone
+
+        micButton.addClickListener(e -> {
+            if (isListening.get()) {
+                // Stop listening
+                UI.getCurrent().getPage().executeJs("recognition.stop();");
+                micButton.getElement().getStyle().set("color", "red"); // Color when off
+                // Manually submit the current text in the input field
+                submitMessage(input.getValue(), apiKeyField, selectApiVersion, tokensField, temperatureField, tokenCountField, messages, list);
+                input.clear(); // Clear the input field after submission
+            } else {
+                // Start listening
+                UI.getCurrent().getPage().executeJs(
+                    "var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();" +
+                    "recognition.lang = 'en-US';" +
+                    "recognition.interimResults = false;" +
+                    "recognition.maxAlternatives = 1;" +
+                    "recognition.onresult = function(event) {" +
+                    "  var speechText = event.results[0][0].transcript;" +
+                    "  $0.value = speechText;" + // Set the input field text
+                    "};" +
+                    "recognition.start();",
+                    input.getElement() // Pass the input element to the JavaScript code
+                );
+                micButton.getElement().getStyle().set("color", "green"); // Color when on
+            }
+            isListening.set(!isListening.get()); // Toggle the state
+        });
+
+		HorizontalLayout inputLayout = new HorizontalLayout(micButton, input, sendButton);
+        inputLayout.setWidthFull();
+        inputLayout.setFlexGrow(1.0, input); // make the input field expand
+        chatBotLayout.add(inputLayout);
+
+        add(promptLayout);
+        add(chatBotLayout);
+        setHeightFull();
     	
     	}
-    
+
+		private void submitMessage(String message, PasswordField apiKeyField, Select<String> selectApiVersion, NumberField tokensField, NumberField temperatureField, TextField tokenCountField, ArrayList<MessageListItem> messages, MessageList list) {
+			MessageListItem message1 = new MessageListItem(
+				message,
+				null , "User");
+			message1.setUserColorIndex(1);
+		
+			messages.add(message1);
+		
+			MessageListItem message2 = new MessageListItem(
+				helper.chatGPT(message, apiKeyField.getValue(), selectApiVersion.getValue(), tokensField.getValue().intValue(), temperatureField.getValue()),
+				null , "Dave");
+			message1.setUserColorIndex(2);
+		
+			messages.add(message2);
+			list.setItems(messages);
+			tokenCountField.setValue(String.valueOf(helper.getTotalTokens()));
+		}
     
     }
 
