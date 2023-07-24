@@ -156,13 +156,17 @@ public class MainView extends HorizontalLayout {
         micButton.addClickListener(e -> {
             if (isListening.get()) {
                 // Stop listening
+				System.out.println("OFF");
                 UI.getCurrent().getPage().executeJs("recognition.stop();");
                 micButton.getElement().getStyle().set("color", "red"); // Color when off
                 // Manually submit the current text in the input field
+				System.out.println("submitting message: \"" + input.getValue()+"\"");
                 submitMessage(input.getValue(), apiKeyField, selectApiVersion, tokensField, temperatureField, tokenCountField, messages, list);
+				System.out.println("clearing input");
                 input.clear(); // Clear the input field after submission
             } else {
                 // Start listening
+				System.out.println("ON");
                 UI.getCurrent().getPage().executeJs(
                     "var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();" +
                     "recognition.lang = 'en-US';" +
@@ -192,6 +196,10 @@ public class MainView extends HorizontalLayout {
     	}
 
 		private void submitMessage(String message, PasswordField apiKeyField, Select<String> selectApiVersion, NumberField tokensField, NumberField temperatureField, TextField tokenCountField, ArrayList<MessageListItem> messages, MessageList list) {
+			if (message.isBlank()) {
+				return;
+			}
+
 			MessageListItem message1 = new MessageListItem(
 				message,
 				null , "User");
