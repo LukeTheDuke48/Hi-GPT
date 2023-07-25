@@ -8,6 +8,7 @@ public class HelperFactory {
             case DAVE -> new DaveHelper();
             case RICK -> new RickHelper();
             case MONKEY_D_GREG -> new MonkeyDGregHelper();
+            case PIRATE_BILL -> new PirateBillHelper();
             case CUSTOM -> new CustomHelper(customSystemMessage);
             default -> null;
         };

@@ -16,10 +16,8 @@ import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @PageTitle("Hi GPT")
@@ -57,7 +55,7 @@ public class MainView extends HorizontalLayout {
 		customHelper = new TextField();
 		customHelper.setPlaceholder("Enter custom prompt...");
 		selectHelper.setLabel("Helper Bot");
-		selectHelper.setItems("Dave", "Rick", "Monkey D. Greg", "Custom");
+		selectHelper.setItems("Dave", "Rick", "Monkey D. Greg", "Pirate Bill", "Custom");
 		selectHelper.setValue("Dave");
 		selectHelper.addValueChangeListener(
 				(HasValue.ValueChangeListener<AbstractField.ComponentValueChangeEvent<Select<String>, String>>)
@@ -109,38 +107,6 @@ public class MainView extends HorizontalLayout {
 
     	list = new MessageList();
     	chatBotLayout.add(list);
-
-    	// MessageInput input = new MessageInput();
-    	// input.addSubmitListener(submitEvent -> {
-
-    	// 	MessageListItem message1 = new MessageListItem(
-    	// 			submitEvent.getValue(),
-        // 	        null , "User");
-        // 	message1.setUserColorIndex(1);
-
-        // 	messages.add(message1);
-
-    	// 	MessageListItem message2 = new MessageListItem(
-        //             helper.chatGPT(submitEvent.getValue(), apiKeyField.getValue(), selectApiVersion.getValue(), tokensField.getValue().intValue(), temperatureField.getValue()),
-        //             null , "Dave");
-        //     message1.setUserColorIndex(2);
-
-        // 	messages.add(message2);
-
-    	//     VerticalLayout messageLayout = new VerticalLayout();
-    	//     messageLayout.setJustifyContentMode(JustifyContentMode.CENTER);
-
-    	//     list.setItems(messages);
-    	//     tokenCountField.setValue(String.valueOf(helper.getTotalTokens()));
-    	// });
-
-    	// input.setWidthFull();
-    	// chatBotLayout.add(input);
-
-    	// HorizontalLayout searchBarLayout = new HorizontalLayout();
-    	// searchBarLayout.setJustifyContentMode(JustifyContentMode.END);
-
-    	// chatBotLayout.add(searchBarLayout);
 
 		TextField input = new TextField();
         input.setPlaceholder("Enter message here...");
