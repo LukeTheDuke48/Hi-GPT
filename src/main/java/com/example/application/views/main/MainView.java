@@ -1,9 +1,8 @@
 package com.example.application.views.main;
 
-
 import java.util.ArrayList;
-import com.example.application.helpers.utils.Helper;
-import com.example.application.helpers.utils.HelperManager;
+import com.example.application.helpers.Helper;
+import com.example.application.helpers.HelperManager;
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.messages.MessageList;
@@ -18,14 +17,16 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @PageTitle("Hi GPT")
 @Route(value = "")
 public class MainView extends HorizontalLayout {
 
-	private Select<String> selectHelper;
-	private TextField customHelper;
+	private final Select<String> selectHelper;
+	private final TextField customHelper;
 	private MessageList list;
 
 	public MainView() {
@@ -33,7 +34,7 @@ public class MainView extends HorizontalLayout {
 		String primaryColor  = "#303030";
 		String secondaryColor  = "#c6cccc";
 		String tertiaryColor  = "#6ec2c2";
-		ArrayList<MessageListItem> messages = new ArrayList<MessageListItem>();
+		ArrayList<MessageListItem> messages = new ArrayList<>();
 
     	VerticalLayout promptLayout = new VerticalLayout();
        	promptLayout.setWidth("20em");
@@ -55,12 +56,16 @@ public class MainView extends HorizontalLayout {
 		customHelper = new TextField();
 		customHelper.setPlaceholder("Enter custom prompt...");
 		selectHelper.setLabel("Helper Bot");
-		selectHelper.setItems("Dave", "Rick", "Monkey D. Greg", "Pirate Bill", "Custom");
-		selectHelper.setValue("Dave");
+		List<String> helperNames = new ArrayList<>();
+		for (Helper h : HelperManager.getInstance().getHelpersList()) {
+			helperNames.add(h.name);
+		}
+		selectHelper.setItems(helperNames);
+		selectHelper.setValue(helperNames.get(0));
 		selectHelper.addValueChangeListener(
 				(HasValue.ValueChangeListener<AbstractField.ComponentValueChangeEvent<Select<String>, String>>)
 						selectStringComponentValueChangeEvent -> {
-			if (selectHelper.getValue().equals("Custom")) {
+			if (selectHelper.getValue().equals(Helper.CUSTOM.name)) {
 				selectHelperLayout.add(customHelper);
 			} else {
 				selectHelperLayout.remove(customHelper);
@@ -99,6 +104,7 @@ public class MainView extends HorizontalLayout {
 			HelperManager.getInstance().resetMessageHistory();
 			messages.clear();
 			list.setItems(messages);
+			tokenCountField.setValue(String.valueOf(HelperManager.getInstance().getTotalTokens()));
 		});
 		promptLayout.add(resetMessageHistory);
 
@@ -182,8 +188,10 @@ public class MainView extends HorizontalLayout {
 
 			messages.add(message1);
 
-			HelperManager.getInstance().switchHelper(Helper.getHelper(selectHelper.getValue()),
-					customHelper.getValue());
+			// If the selected helper is "Custom", we'll use the user's custom system message
+			Helper selectedHelper = Helper.getHelperFromName(selectHelper.getValue());
+			String customSystemMessage = selectedHelper.systemMessage != null ? null : customHelper.getValue();
+			HelperManager.getInstance().setHelper(selectedHelper, customSystemMessage);
 			String helperResponse = HelperManager.getInstance().getResponse(message,
 					apiKeyField.getValue(), selectApiVersion.getValue(),
 					tokensField.getValue().intValue(), temperatureField.getValue());
@@ -195,7 +203,4 @@ public class MainView extends HorizontalLayout {
 			list.setItems(messages);
 			tokenCountField.setValue(String.valueOf(HelperManager.getInstance().getTotalTokens()));
 		}
-
     }
-
-

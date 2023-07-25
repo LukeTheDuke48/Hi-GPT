@@ -1,41 +1,68 @@
 package com.example.application.helpers;
 
-import com.example.application.helpers.utils.Helper;
-import com.example.application.helpers.utils.HelperManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
-import oshi.util.tuples.Pair;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class AbstractHelper implements IHelper {
-    protected Helper helper;
-    protected String customSystemMessage;
+public class HelperManager {
+    private static HelperManager instance;
 
-    protected AbstractHelper(Helper helper, String customSystemMessage) {
-        this.helper = helper;
-        this.customSystemMessage = customSystemMessage;
+    private final Helper[] helpersList;
+    private Helper currentHelper;
+    private final List<Map<String, String>> messageHistory;
+    private int totalTokens;
+
+    private HelperManager() {
+        helpersList = Helper.values();
+        currentHelper = helpersList[0];
+        messageHistory = new ArrayList<>();
+        messageHistory.add(0, Map.of("role", "system", "content", currentHelper.systemMessage));
+        totalTokens = 0;
     }
 
-    public String getName() {
-        return helper.name;
+    public static HelperManager getInstance() {
+        if (instance == null) {
+            instance = new HelperManager();
+        }
+        return instance;
     }
 
-    public String getSystemMessage() {
-        return helper.systemMessage == null ? customSystemMessage : helper.systemMessage;
+    public int getTotalTokens() {
+        return totalTokens;
     }
 
-    public Pair<String, Integer> getResponse(String message, String key, String apiVersion,
-                                             List<Map<String, String>> messageHistory, int tokens,
-                                             double temperature) {
+    public Helper[] getHelpersList() {
+        return helpersList;
+    }
+
+    public void setHelper(Helper helper, String customSystemMessage) {
+        currentHelper = helper;
+
+        // Replace the old system message with the new helper's system message
+        String newSystemMessage = customSystemMessage != null ? customSystemMessage : helper.systemMessage;
+        messageHistory.remove(0);
+        messageHistory.add(0, Map.of("role", "system", "content", newSystemMessage));
+    }
+
+    public void resetMessageHistory() {
+        // Keep only the system message, but reset everything else
+        Map<String, String> systemMessage = messageHistory.remove(0);
+        messageHistory.clear();
+        messageHistory.add(systemMessage);
+        totalTokens = 0;
+    }
+
+    public String getResponse(String message, String key, String apiVersion,
+                                             int tokens, double temperature) {
         String API_ENDPOINT = "https://api.openai.com/v1/chat/completions";
-        int tokenTotal = 0;
         try {
             OkHttpClient client = new OkHttpClient.Builder()
                     .readTimeout(60, TimeUnit.SECONDS)
@@ -80,9 +107,8 @@ public class AbstractHelper implements IHelper {
                         .path("content")
                         .asText();
 
-
                 // Total number of tokens used in the query
-                tokenTotal = rootNode
+                totalTokens += rootNode
                         .path("usage")
                         .path("total_tokens")
                         .asInt();
@@ -92,24 +118,32 @@ public class AbstractHelper implements IHelper {
                 messageHistory.add(assistantMessage);
 
                 System.out.println(responseBody);
-                return new Pair<>(content, tokenTotal);
+                return content;
 
             } else {
                 System.err.println("Request failed with code: " + response.code());
                 System.err.println(response.body().string());
-                return new Pair<>(helper.name+" didn't want to talk because the request failed with code: " + response.code(), tokenTotal);
+                return currentHelper.name+" didn't want to talk because the request failed with code: " + response.code();
             }
         } catch (JsonProcessingException e) {
             e.printStackTrace();
-            return new Pair<>(helper.name+" didn't want to talk because there was an error processing the JSON: " + e.getMessage(), tokenTotal);
+            return currentHelper.name+" didn't want to talk because there was an error processing the JSON: " + e.getMessage();
         } catch (IOException e) {
             e.printStackTrace();
-            return new Pair<>(helper.name+" didn't want to talk because there was an IO exception: " + e.getMessage(),
-                   tokenTotal);
+            return currentHelper.name+" didn't want to talk because there was an IO exception: " + e.getMessage();
         } catch (Exception e) {
             e.printStackTrace();
-            return new Pair<>(helper.name+" didn't want to talk because an exception occurred: " + e.getMessage(),
-                    tokenTotal);
+            return currentHelper.name+" didn't want to talk because an exception occurred: " + e.getMessage();
+        }
+    }
+
+    private String mapToJson(Map<String, Object> map) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.writeValueAsString(map);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return "";
         }
     }
 }
