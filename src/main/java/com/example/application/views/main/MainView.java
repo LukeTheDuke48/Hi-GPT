@@ -2,7 +2,8 @@ package com.example.application.views.main;
 
 
 import java.util.ArrayList;
-import com.example.application.ChatGPTHelper;
+import com.example.application.helpers.utils.Helper;
+import com.example.application.helpers.utils.HelperManager;
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.messages.MessageList;
@@ -25,7 +26,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Route(value = "")
 public class MainView extends HorizontalLayout {
 
-	private ChatGPTHelper helper;
+	private Select<String> selectHelper;
+	private TextField customHelper;
+	private MessageList list;
 
 	public MainView() {
 
@@ -33,8 +36,6 @@ public class MainView extends HorizontalLayout {
 		String secondaryColor  = "#c6cccc";
 		String tertiaryColor  = "#6ec2c2";
 		ArrayList<MessageListItem> messages = new ArrayList<MessageListItem>();
-
-		this.helper = new ChatGPTHelper();
 
     	VerticalLayout promptLayout = new VerticalLayout();
        	promptLayout.setWidth("20em");
@@ -52,8 +53,8 @@ public class MainView extends HorizontalLayout {
     	promptLayout.add(selectApiVersion);
 
 		VerticalLayout selectHelperLayout = new VerticalLayout();
-		Select<String> selectHelper = new Select<>();
-		TextField customHelper = new TextField();
+		selectHelper = new Select<>();
+		customHelper = new TextField();
 		customHelper.setPlaceholder("Enter custom prompt...");
 		selectHelper.setLabel("Helper Bot");
 		selectHelper.setItems("Dave", "Rick", "Monkey D. Greg", "Custom");
@@ -92,13 +93,21 @@ public class MainView extends HorizontalLayout {
     	TextField tokenCountField;
 
     	tokenCountField = new TextField("Total Tokens");
-    	        tokenCountField.setReadOnly(true);
-    	        promptLayout.add(tokenCountField);
+		tokenCountField.setReadOnly(true);
+		promptLayout.add(tokenCountField);
+
+		Button resetMessageHistory = new Button("Reset Message History");
+		resetMessageHistory.addClickListener((ComponentEventListener<ClickEvent<Button>>) buttonClickEvent -> {
+			HelperManager.getInstance().resetMessageHistory();
+			messages.clear();
+			list.setItems(messages);
+		});
+		promptLayout.add(resetMessageHistory);
 
     	VerticalLayout chatBotLayout = new VerticalLayout();
     	chatBotLayout.setJustifyContentMode(JustifyContentMode.END);
 
-    	MessageList list = new MessageList();
+    	list = new MessageList();
     	chatBotLayout.add(list);
 
     	// MessageInput input = new MessageInput();
@@ -201,20 +210,24 @@ public class MainView extends HorizontalLayout {
 			}
 
 			MessageListItem message1 = new MessageListItem(
-				message,
-				null , "User");
+					message,
+					null, "User");
 			message1.setUserColorIndex(1);
 
 			messages.add(message1);
 
-			MessageListItem message2 = new MessageListItem(
-				helper.chatGPT(message, apiKeyField.getValue(), selectApiVersion.getValue(), tokensField.getValue().intValue(), temperatureField.getValue()),
-				null , "Dave");
+			HelperManager.getInstance().switchHelper(Helper.getHelper(selectHelper.getValue()),
+					customHelper.getValue());
+			String helperResponse = HelperManager.getInstance().getResponse(message,
+					apiKeyField.getValue(), selectApiVersion.getValue(),
+					tokensField.getValue().intValue(), temperatureField.getValue());
+
+			MessageListItem message2 = new MessageListItem(helperResponse);
 			message1.setUserColorIndex(2);
 
 			messages.add(message2);
 			list.setItems(messages);
-			tokenCountField.setValue(String.valueOf(helper.getTotalTokens()));
+			tokenCountField.setValue(String.valueOf(HelperManager.getInstance().getTotalTokens()));
 		}
 
     }
