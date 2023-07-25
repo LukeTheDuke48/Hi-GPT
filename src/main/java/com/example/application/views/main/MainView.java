@@ -222,7 +222,7 @@ public class MainView extends HorizontalLayout {
 					apiKeyField.getValue(), selectApiVersion.getValue(),
 					tokensField.getValue().intValue(), temperatureField.getValue());
 
-			MessageListItem message2 = new MessageListItem(helperResponse);
+			MessageListItem message2 = new MessageListItem(helperResponse, null, selectHelper.getValue());
 			message1.setUserColorIndex(2);
 
 			messages.add(message2);
