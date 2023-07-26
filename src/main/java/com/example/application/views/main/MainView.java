@@ -3,6 +3,7 @@ package com.example.application.views.main;
 import java.util.ArrayList;
 import com.example.application.helpers.Helper;
 import com.example.application.helpers.HelperManager;
+import com.example.application.helpers.TextToSpeech;
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.messages.MessageList;
@@ -21,6 +22,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+
 @PageTitle("Hi GPT")
 @Route(value = "")
 public class MainView extends HorizontalLayout {
@@ -28,6 +30,8 @@ public class MainView extends HorizontalLayout {
 	private final Select<String> selectHelper;
 	private final TextField customHelper;
 	private MessageList list;
+	//private final TextToSpeech textToSpeech;
+
 
 	public MainView() {
 
@@ -202,7 +206,11 @@ public class MainView extends HorizontalLayout {
 			String helperResponse = HelperManager.getInstance().getResponse(message,
 					apiKeyField.getValue(), selectApiVersion.getValue(),
 					tokensField.getValue().intValue(), temperatureField.getValue());
-
+			try {
+				TextToSpeech.synthesizeText(helperResponse);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			MessageListItem message2 = new MessageListItem(helperResponse, null, selectHelper.getValue());
 			message1.setUserColorIndex(2);
 
