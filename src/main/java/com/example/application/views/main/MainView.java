@@ -135,6 +135,7 @@ public class MainView extends HorizontalLayout {
         AtomicBoolean isListening = new AtomicBoolean(false); // State of the microphone
 
         micButton.addClickListener(e -> {
+        	try {
             if (isListening.get()) {
                 // Stop listening
 				System.out.println("OFF");
@@ -143,26 +144,32 @@ public class MainView extends HorizontalLayout {
                 // Manually submit the current text in the input field
 				System.out.println("submitting message: \"" + input.getValue()+"\"");
                 submitMessage(input.getValue(), apiKeyField, selectApiVersion, tokensField, temperatureField, tokenCountField, messages, list);
-				System.out.println("clearing input");
-                input.clear(); // Clear the input field after submission
             } else {
                 // Start listening
 				System.out.println("ON");
                 UI.getCurrent().getPage().executeJs(
-                    "var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();" +
-                    "recognition.lang = 'en-US';" +
-                    "recognition.interimResults = false;" +
-                    "recognition.maxAlternatives = 1;" +
-                    "recognition.onresult = function(event) {" +
-                    "  var speechText = event.results[0][0].transcript;" +
-                    "  $0.value = speechText;" + // Set the input field text
-                    "};" +
-                    "recognition.start();",
+                		"var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition || window.mozSpeechRecognition || window.msSpeechRecognition)();" +
+                			    "recognition.lang = 'en-US';" +
+                			    "recognition.interimResults = false;" +
+                			    "recognition.maxAlternatives = 1;" +
+                			    "recognition.onresult = function(event) {" +
+                			    "  var speechText = event.results[0][0].transcript;" +
+                			    "  $0.value = speechText;" + // Set the input field text
+                			    "  $0.dispatchEvent(new Event('change'));" + // Trigger the change event
+                			    "};" +
+                			    "recognition.start();",
                     input.getElement() // Pass the input element to the JavaScript code
+                    
                 );
+                input.clear(); // Clear the input field after submission
+
                 micButton.getElement().getStyle().set("color", "green"); // Color when on
             }
             isListening.set(!isListening.get()); // Toggle the state
+
+        	} catch(Exception exception) {
+        		exception.printStackTrace();
+        	}
         });
 
 		HorizontalLayout inputLayout = new HorizontalLayout(micButton, input, sendButton);
