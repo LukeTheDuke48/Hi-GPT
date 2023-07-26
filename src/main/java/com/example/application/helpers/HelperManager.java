@@ -65,9 +65,9 @@ public class HelperManager {
         String API_ENDPOINT = "https://api.openai.com/v1/chat/completions";
         try {
             OkHttpClient client = new OkHttpClient.Builder()
-                    .readTimeout(60, TimeUnit.SECONDS)
-                    .writeTimeout(60, TimeUnit.SECONDS)
-                    .connectTimeout(60, TimeUnit.SECONDS)
+                    .readTimeout(100, TimeUnit.SECONDS)
+                    .writeTimeout(100, TimeUnit.SECONDS)
+                    .connectTimeout(100, TimeUnit.SECONDS)
                     .build();
             MediaType mediaType = MediaType.parse("application/json");
 
